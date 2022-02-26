@@ -1,20 +1,10 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/gocolly/colly"
+	"github.com/brodiep21/wscraper1/scraper"
 )
 
 func main() {
-	c := colly.NewCollector(
-		colly.AllowedDomains("en.wikipedia.org"),
-	)
+	scraper.Scraper()
 
-	// Find and print all links
-	c.OnHTML(".mw-parser-output", func(e *colly.HTMLElement) {
-		links := e.ChildAttrs("a", "href")
-		fmt.Println(links)
-	})
-	c.Visit("https://en.wikipedia.org/wiki/Web_scraping")
 }
