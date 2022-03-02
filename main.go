@@ -11,25 +11,19 @@ import (
 )
 
 func main() {
-	//file creater for costs
-	file, err := os.Create("costs.csv")
-	if err != nil {
-		log.Fatalf("Could not create file, error is %q", err)
-	}
-	//file creater for links
-	file2, err := os.Create("links.csv")
+	//file creater
+	file, err := os.Create("cards.csv")
 	if err != nil {
 		log.Fatalf("Could not create file, error is %q", err)
 	}
 	//allows writer to write in the correlating file
 	writer := csv.NewWriter(file)
-	writer2 := csv.NewWriter(file2)
 
 	defer file.Close()
-	defer file2.Close()
 
 	defer writer.Flush()
-	defer writer2.Flush()
+
+	linksNcosts := make([][]string, 0)
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("www.ebay.com"),
@@ -40,12 +34,13 @@ func main() {
 		link := e.ChildAttr("a", "href")
 		csvLinks := make([]string, 0)
 		csvLinks = append(csvLinks, link)
-		writer2.Write(csvLinks)
+		linksNcosts = append(linksNcosts, csvLinks)
 	})
+
+	count := 0
 	//finds the price of each individual card, parses the value to be an int in the format of up to 4 digits with no decimal and prints it to the terminal
 	c.OnHTML(".s-item__detail.s-item__detail--primary", func(e *colly.HTMLElement) {
 		prices := e.ChildText("span.s-item__price")
-		csvCosts := make([]string, 0)
 		prices = strings.ReplaceAll(prices, "$", "")
 		prices = strings.ReplaceAll(prices, ",", "")
 		newprice := ""
@@ -54,17 +49,30 @@ func main() {
 				newprice += string(v)
 			}
 		}
-		//filters out the ghost text behind the HTML element indicating $0
+		//filters out the ghost text behind the HTML element indicating $0 for html console
 		if newprice == "" {
 		} else {
-			//formats string to int and compares price, then converts back to string in order to create a slice of strings
-			csvCosts = append(csvCosts, newprice)
-			writer.Write(csvCosts)
+			//range over the [][]strings that already has the links, and append costs to the proper []strings
+			for k, v := range linksNcosts {
+				if k == count {
+					linksNcosts[count] = append(v, newprice)
+				} else {
+					continue
+				}
+			}
+			count++
 		}
 	})
+
 	c.OnRequest(func(request *colly.Request) {
 		fmt.Println("Visiting", request.URL.String()+" and getting video card prices")
 	})
 
 	c.Visit("https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2380057.m570.l1312&_nkw=gtx+3080+graphics+card&_sacat=0")
+
+	for _, cLink := range linksNcosts {
+		if err := writer.Write(cLink); err != nil {
+			log.Fatalln("Failed printing to csv file")
+		}
+	}
 }
