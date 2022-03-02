@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	//file creater
+	//file creation
 	file, err := os.Create("cards.csv")
 	if err != nil {
 		log.Fatalf("Could not create file, error is %q", err)
