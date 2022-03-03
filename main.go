@@ -50,12 +50,13 @@ func main() {
 				newprice += string(v)
 			}
 		}
+
 		//filters out the ghost text behind the HTML element indicating $0 for html console, as well as a ghost 200 item
 		if newprice == "" || newprice == "200" {
 		} else {
 			//range over the [][]strings that already has the links, and append costs to the proper []strings
 			for k, v := range linksNcosts {
-				if k == count {
+				if k == count+1 {
 					linksNcosts[count] = append(v, newprice)
 				} else {
 					continue
@@ -64,23 +65,27 @@ func main() {
 			count++
 		}
 	})
-
 	c.OnRequest(func(request *colly.Request) {
 		fmt.Println("Visiting", request.URL.String()+" and getting video card prices")
 	})
 
-	ogpage := "https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2380057.m570.l1312&_nkw=gtx+3080+graphics+card&_sacat=0"
+	//original search page
+	ogpage := "https://www.ebay.com/sch/i.html?_from=R40&_nkw=gtx+3080+graphics+card&_sacat=0&rt=nc&LH_BIN=1"
 	pagecounter := 1
 
-	for i := 0; i < 20; i++ {
+	//loop through respective pages
+	for i := 0; i < 17; i++ {
 		if i == 0 {
 			c.Visit(ogpage)
 		} else {
+			count++
 			pagecounter++
 			newpage := ogpage + "&_pgn=" + strconv.Itoa(pagecounter)
 			c.Visit(newpage)
 		}
 	}
+
+	//takes the values([]strings) and writes them directly to CSV
 	for _, cLink := range linksNcosts {
 		if err := writer.Write(cLink); err != nil {
 			log.Fatalln("Failed printing to csv file")
