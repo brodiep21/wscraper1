@@ -33,8 +33,10 @@ func main() {
 	//finds the link associated with each card, adds it to a slice of strings and prints it to a link file
 	c.OnHTML(".s-item__info.clearfix", func(e *colly.HTMLElement) {
 		link := e.ChildAttr("a", "href")
+
 		csvLinks := make([]string, 0)
 		csvLinks = append(csvLinks, link)
+
 		linksNcosts = append(linksNcosts, csvLinks)
 	})
 
@@ -65,6 +67,7 @@ func main() {
 			count++
 		}
 	})
+
 	c.OnRequest(func(request *colly.Request) {
 		fmt.Println("Visiting", request.URL.String()+" and getting video card prices")
 	})
